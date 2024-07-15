@@ -1,5 +1,5 @@
 // const format = require("pg-format");
-// there is already an index.js in the folder url
+// there is already an index.js in the respective folder url
 const db = require("./db/connection");
 
 exports.selectTopics = (query) => {
