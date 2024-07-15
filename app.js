@@ -12,6 +12,8 @@ app.get("/api", (req, res, next) => {
 
 app.get("/api/topics", controllers.getTopics);
 
+app.get("/api/articles/:article_id", controllers.getArticlesById);
+
 app.use((err, req, res, next) => {
   // for TypeError(500) - not explicitly tested
   next(err);
