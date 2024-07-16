@@ -16,7 +16,6 @@ exports.getArticlesById = (req, res, next) => {
   models
     .selectArticlesById(req.params.article_id)
     .then((article) => {
-      // to catch the error here
       if (article) {
         res.status(200).send({ article });
       } else {
@@ -54,18 +53,19 @@ exports.postCommentByArticleId = (req, res, next) => {
     .then((comment) => {
       res.status(201).send({ comment });
     })
-    .catch(next);
+    .catch((err) => {
+      next(err);
+    });
 };
 
 exports.patchArticleById = (req, res, next) => {
   models
     .updateArticleById(req.body.inc_votes, req.params.article_id)
     .then((article) => {
-      if (article) {
-        res.status(201).send(article);
-      } else {
-        // if index[0] undefined
+      if (article === undefined) {
         res.status(404).send({ msg: "Not found" });
+      } else {
+        res.status(201).send(article);
       }
     })
     .catch(next);
@@ -79,4 +79,13 @@ exports.deleteCommentByCommentId = (req, res, next) => {
       res.status(404).send({ msg: "Not found" });
     }
   });
+};
+
+exports.getUsers = (req, res, next) => {
+  models
+    .selectUsers(req.query)
+    .then((users) => {
+      res.status(200).send({ users });
+    })
+    .catch(next);
 };
