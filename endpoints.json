@@ -67,5 +67,14 @@
         }
       ]
     }
+  },
+  "POST /api/articles/:article_id/comments": {
+    "description": "returns the posted comment",
+    "queries": ["author", "body", "id"],
+    "exampleResponse": [
+      {
+        "body": "Not recommending this article"
+      }
+    ]
   }
 }

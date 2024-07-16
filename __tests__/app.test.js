@@ -170,5 +170,63 @@ describe("/api/articles/:article_id/comments", () => {
           expect(body.msg).toBe("Not found");
         });
     });
+    test("status 400 not found for an invalid id type (e.g. string)", () => {
+      return request(app)
+        .get("/api/articles/not-an-id/comments")
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Bad request");
+        });
+    });
+    test("status 404 not found for a valid id type (number) but incorrect id number", () => {
+      return request(app)
+        .get("/api/articles/9999999/comments")
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Not found");
+        });
+    });
+  });
+  describe("POST", () => {
+    test("status 201 responds with the posted comment", () => {
+      const objToPost = {
+        author: "rogersop",
+        body: "Not recommending this article",
+      };
+      return request(app)
+        .post("/api/articles/1/comments")
+        .send(objToPost)
+        .expect(201)
+        .then(({ body }) => {
+          expect(body.comment.body).toBe("Not recommending this article");
+        });
+    });
+    test("status 400 not found an author as referenced in the users table", () => {
+      const objToPost = {
+        author: "chaka khan",
+        body: "Not recommending this article",
+      };
+      return request(app)
+        .post("/api/articles/1/comments")
+        .send(objToPost)
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Bad request");
+        });
+    });
+    // need to double check this one:
+    test("status 400 bad request for a valid id type (number) but incorrect id number", () => {
+      const objToPost = {
+        author: "chaka khan",
+        body: "Not recommending this article",
+      };
+      return request(app)
+        .post("/api/articles/99999999/comments")
+        .send(objToPost)
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Bad request");
+        });
+    });
   });
 });

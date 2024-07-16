@@ -47,3 +47,13 @@ exports.getCommentsByArticleId = (req, res, next) => {
     })
     .catch(next);
 };
+
+exports.postCommentByArticleId = (req, res, next) => {
+  models
+    .insertCommentByArticleId(req.body, req.params.article_id)
+    .then((comment) => {
+      console.log(comment);
+      res.status(201).send({ comment });
+    })
+    .catch(next);
+};
