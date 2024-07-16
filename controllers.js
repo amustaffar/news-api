@@ -70,3 +70,13 @@ exports.patchArticleById = (req, res, next) => {
     })
     .catch(next);
 };
+
+exports.deleteCommentByCommentId = (req, res, next) => {
+  models.removeCommentByCommentId(req.params.comment_id).then((deleted) => {
+    if (deleted) {
+      res.status(204).send();
+    } else {
+      res.status(404).send({ msg: "Not found" });
+    }
+  });
+};

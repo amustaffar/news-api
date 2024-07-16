@@ -273,3 +273,14 @@ describe("/api/articles/:article_id/comments", () => {
     });
   });
 });
+
+describe("/api/comments/:comment_id", () => {
+  describe("DELETE", () => {
+    test("status 204: no content status code indicates that the server has successfully fulfilled the request and there is no additional information to send back", () => {
+      return request(app).delete("/api/comments/1").expect(204);
+    });
+    test("status 404: not a valid id", () => {
+      return request(app).delete("/api/comments/999999").expect(404);
+    });
+  });
+});
