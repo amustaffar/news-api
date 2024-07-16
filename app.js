@@ -32,6 +32,8 @@ app.post(
 
 app.delete("/api/comments/:comment_id", controllers.deleteCommentByCommentId);
 
+app.get("/api/users", controllers.getUsers);
+
 app.use((err, req, res, next) => {
   if (err.status && err.msg) {
     res.status(err.status).send({ msg: err.msg });

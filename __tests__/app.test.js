@@ -2,13 +2,10 @@
 const request = require("supertest");
 
 // setup databases
-// there is already an index.js in the respective folder url
 const db = require("../db/connection");
 const testData = require("../db/data/test-data");
 const app = require("../app");
 const seed = require("../db/seeds/seed");
-
-//endpoints from endpoints.json
 const endpoints = require("../endpoints.json");
 
 // seeding prior each test with test data
@@ -122,6 +119,16 @@ describe("/api/articles/:article_id", () => {
       const objToPatch = { inc_votes: "fffffff" };
       return request(app)
         .patch("/api/articles/3")
+        .send(objToPatch)
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Bad request");
+        });
+    });
+    test("status 400: invalid query type (string instead of a number", () => {
+      const objToPatch = { inc_votes: 30000 };
+      return request(app)
+        .patch("/api/articles/not-an-id")
         .send(objToPatch)
         .expect(400)
         .then(({ body }) => {
@@ -257,7 +264,7 @@ describe("/api/articles/:article_id/comments", () => {
           expect(body.msg).toBe("Bad request");
         });
     });
-    // need to double check this one:
+
     test("status 400 bad request for a valid id type (number) but incorrect id number", () => {
       const objToPost = {
         author: "chaka khan",
@@ -281,6 +288,26 @@ describe("/api/comments/:comment_id", () => {
     });
     test("status 404: not a valid id", () => {
       return request(app).delete("/api/comments/999999").expect(404);
+    });
+  });
+});
+
+describe("/api/users", () => {
+  describe("GET", () => {
+    test("status 200 returns an array of user objects with username, name and avatar_url properties ", () => {
+      return request(app)
+        .get("/api/users")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.users.length).toBe(4);
+          body.users.forEach((user) => {
+            expect(user).toEqual({
+              username: expect.any(String),
+              name: expect.any(String),
+              avatar_url: expect.any(String),
+            });
+          });
+        });
     });
   });
 });
