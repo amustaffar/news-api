@@ -30,6 +30,8 @@ app.post(
   controllers.postCommentByArticleId
 );
 
+app.delete("/api/comments/:comment_id", controllers.deleteCommentByCommentId);
+
 app.use((err, req, res, next) => {
   if (err.status && err.msg) {
     res.status(err.status).send({ msg: err.msg });
