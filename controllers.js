@@ -52,8 +52,21 @@ exports.postCommentByArticleId = (req, res, next) => {
   models
     .insertCommentByArticleId(req.body, req.params.article_id)
     .then((comment) => {
-      console.log(comment);
       res.status(201).send({ comment });
+    })
+    .catch(next);
+};
+
+exports.patchArticleById = (req, res, next) => {
+  models
+    .updateArticleById(req.body.inc_votes, req.params.article_id)
+    .then((article) => {
+      if (article) {
+        res.status(201).send(article);
+      } else {
+        // if index[0] undefined
+        res.status(404).send({ msg: "Not found" });
+      }
     })
     .catch(next);
 };

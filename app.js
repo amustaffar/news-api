@@ -9,7 +9,6 @@ const endpoints = require("./endpoints.json");
 app.use(express.json());
 
 app.get("/api", (req, res, next) => {
-  //console.log(endpoints);
   res.status(200).send({ endpoints });
 });
 
@@ -18,6 +17,8 @@ app.get("/api/topics", controllers.getTopics);
 app.get("/api/articles", controllers.getArticles);
 
 app.get("/api/articles/:article_id", controllers.getArticlesById);
+
+app.patch("/api/articles/:article_id", controllers.patchArticleById);
 
 app.get(
   "/api/articles/:article_id/comments",

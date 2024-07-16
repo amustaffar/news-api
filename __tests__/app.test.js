@@ -86,6 +86,49 @@ describe("/api/articles/:article_id", () => {
         });
     });
   });
+  describe("PATCH", () => {
+    test("status 201 responds with the updated article: article 3; votes increased by 30", () => {
+      const objToPatch = { inc_votes: 30 };
+      const objToReceive = {
+        article_id: 3,
+        title: "Eight pug gifs that remind me of mitch",
+        topic: "mitch",
+        author: "icellusedkars",
+        body: "some gifs",
+        created_at: "2020-11-03T09:12:00.000Z",
+        votes: 30,
+        article_img_url:
+          "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700",
+      };
+      return request(app)
+        .patch("/api/articles/3")
+        .send(objToPatch)
+        .expect(201)
+        .then(({ body }) => {
+          expect(body).toStrictEqual(objToReceive);
+        });
+    });
+    test("status 404: id is not in the database", () => {
+      const objToPatch = { inc_votes: 30 };
+      return request(app)
+        .patch("/api/articles/99999")
+        .send(objToPatch)
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Not found");
+        });
+    });
+    test("status 400: invalid inc_votes provided", () => {
+      const objToPatch = { inc_votes: "fffffff" };
+      return request(app)
+        .patch("/api/articles/3")
+        .send(objToPatch)
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Bad request");
+        });
+    });
+  });
 });
 
 describe("/api/articles", () => {
