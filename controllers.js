@@ -1,3 +1,4 @@
+const { query } = require("express");
 const models = require("./models");
 
 exports.getTopics = (req, res, next) => {
@@ -12,7 +13,7 @@ exports.getTopics = (req, res, next) => {
 };
 
 exports.getArticlesById = (req, res, next) => {
-  console.log(req.params.article_id);
+  //console.log(req.params.article_id);
   models
     .selectArticlesById(req.params.article_id)
     .then((article) => {
@@ -28,4 +29,14 @@ exports.getArticlesById = (req, res, next) => {
     .catch((err) => {
       next(err);
     });
+};
+
+exports.getArticles = (req, res, next) => {
+  models
+    .selectArticles(query)
+    .then((articles) => {
+      //console.log(articles.length);
+      res.status(200).send({ articles });
+    })
+    .catch(next);
 };

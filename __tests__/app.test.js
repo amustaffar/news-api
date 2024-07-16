@@ -69,12 +69,50 @@ describe("/api/articles/:article_id", () => {
           });
         });
     });
-    test("status 404 when passed an invalid (the query will be a string anyway) / non-existant article id", () => {
+    test("status 404 when passed a non-existant article id", () => {
       return request(app)
         .get("/api/articles/9999")
         .expect(404)
         .then(({ body }) => {
           expect(body.msg).toBe("No article found under article_id 9999");
+        });
+    });
+    test("status 400 when passed a string as article id", () => {
+      return request(app)
+        .get("/api/articles/not-an-id")
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Bad request");
+        });
+    });
+  });
+});
+
+describe("/api/articles", () => {
+  // can't really think of the sad path for this endpoint atm
+  describe("GET", () => {
+    test("status 200 returns all articles sorted by date in descending order", () => {
+      return request(app)
+        .get("/api/articles")
+        .expect(200)
+        .then(({ body }) => {
+          //console.log(body.articles);
+          expect(body.articles.length).toBe(13);
+          expect(body.articles).toBeSortedBy("created_at", {
+            descending: true,
+          });
+          body.articles.forEach((article) => {
+            expect(article).toEqual({
+              author: expect.any(String),
+              title: expect.any(String),
+              article_id: expect.any(Number),
+              topic: expect.any(String),
+              created_at: expect.any(String),
+              votes: expect.any(Number),
+              article_img_url: expect.any(String),
+              comment_count: expect.any(String),
+            });
+          });
         });
     });
   });
