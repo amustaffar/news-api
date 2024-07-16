@@ -89,14 +89,12 @@ describe("/api/articles/:article_id", () => {
 });
 
 describe("/api/articles", () => {
-  // can't really think of the sad path for this endpoint atm
   describe("GET", () => {
     test("status 200 returns all articles sorted by date in descending order", () => {
       return request(app)
         .get("/api/articles")
         .expect(200)
         .then(({ body }) => {
-          //console.log(body.articles);
           expect(body.articles.length).toBe(13);
           expect(body.articles).toBeSortedBy("created_at", {
             descending: true,
@@ -113,6 +111,63 @@ describe("/api/articles", () => {
               comment_count: expect.any(String),
             });
           });
+        });
+    });
+  });
+});
+
+describe("/api/articles/:article_id/comments", () => {
+  describe("GET", () => {
+    test("status 200 returns an array of comments with correct properties, with the most recent comments first - article no. 3", () => {
+      return request(app)
+        .get("/api/articles/3/comments")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.comments.length).toBe(2);
+          expect(body.comments).toBeSortedBy("created_at", {
+            descending: true,
+          });
+          body.comments.forEach((comment) => {
+            expect(comment).toEqual({
+              comment_id: expect.any(Number),
+              votes: expect.any(Number),
+              created_at: expect.any(String),
+              author: expect.any(String),
+              body: expect.any(String),
+              votes: expect.any(Number),
+              article_id: expect.any(Number),
+            });
+          });
+        });
+    });
+    test("status 200 returns an array of comments with correct properties, with the most recent comments first - article no. 1", () => {
+      return request(app)
+        .get("/api/articles/1/comments")
+        .expect(200)
+        .then(({ body }) => {
+          expect(body.comments.length).toBe(11);
+          expect(body.comments).toBeSortedBy("created_at", {
+            descending: true,
+          });
+          body.comments.forEach((comment) => {
+            expect(comment).toEqual({
+              comment_id: expect.any(Number),
+              votes: expect.any(Number),
+              created_at: expect.any(String),
+              author: expect.any(String),
+              body: expect.any(String),
+              votes: expect.any(Number),
+              article_id: expect.any(Number),
+            });
+          });
+        });
+    });
+    test("status 404 not found for an article with no comment present e.g. article no. 2", () => {
+      return request(app)
+        .get("/api/articles/2/comments")
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Not found");
         });
     });
   });
