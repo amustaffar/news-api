@@ -77,3 +77,14 @@ exports.insertCommentByArticleId = (comment, id) => {
       return rows[0];
     });
 };
+
+exports.updateArticleById = (inc_votes, id) => {
+  return db
+    .query(
+      `UPDATE articles SET votes = votes + $1 WHERE article_id = $2 RETURNING *`,
+      [inc_votes, id]
+    )
+    .then(({ rows }) => {
+      return rows[0];
+    });
+};
