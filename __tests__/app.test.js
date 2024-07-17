@@ -63,6 +63,7 @@ describe("/api/articles/:article_id", () => {
             votes: 0,
             article_img_url:
               "https://images.pexels.com/photos/158651/news-newsletter-newspaper-information-158651.jpeg?w=700&h=700",
+            comment_count: "2",
           });
         });
     });
