@@ -16,10 +16,29 @@ exports.selectArticlesById = (id) => {
     });
 };
 
+// sort only by valid columns - not accepting "body" and "article_img_url" columns
 exports.selectArticles = (query) => {
   const { sort_by = "created_at", order = "desc" } = query;
+
+  const acceptedOrderValues = ["asc", "desc"];
+  const acceptedSortValues = [
+    "article_id",
+    "title",
+    "topic",
+    "author",
+    "created_at",
+    "votes",
+  ];
+
+  if (
+    !acceptedOrderValues.includes(order) ||
+    !acceptedSortValues.includes(sort_by)
+  ) {
+    return Promise.reject({ status: 400, msg: "Bad request" });
+  }
+
   const queryString = format(
-    // never SELECT * for API -> dangerous
+    // reminder: never SELECT * for API -> dangerous
     `SELECT
       articles.author,
       articles.title,

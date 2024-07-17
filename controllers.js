@@ -1,4 +1,3 @@
-const { query } = require("express");
 const models = require("./models");
 
 exports.getTopics = (req, res, next) => {
@@ -31,7 +30,7 @@ exports.getArticlesById = (req, res, next) => {
 
 exports.getArticles = (req, res, next) => {
   models
-    .selectArticles(query)
+    .selectArticles(req.query)
     .then((articles) => {
       res.status(200).send({ articles });
     })
