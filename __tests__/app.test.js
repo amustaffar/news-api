@@ -163,6 +163,61 @@ describe("/api/articles", () => {
           });
         });
     });
+    // testing for sort and order options - status 200
+    const sortOptions = [
+      "article_id",
+      "title",
+      "topic",
+      "author",
+      "created_at",
+      "votes",
+    ];
+    const orderOptions = ["asc", "desc"];
+    const jestOptionObj = {
+      asc: { descending: false },
+      desc: { descending: true },
+    };
+
+    for (const orderOption of orderOptions) {
+      for (const sortOption of sortOptions) {
+        test(`status 200 for ?sort_by=${sortOption}&order=${orderOption} returns the articles in the article table sorted as queried by users`, () => {
+          return request(app)
+            .get(`/api/articles?sort_by=${sortOption}&order=${orderOption}`)
+            .expect(200)
+            .then(({ body: { articles } }) => {
+              expect(articles.length).toBe(13);
+              expect(articles).toBeSortedBy(
+                sortOption,
+                jestOptionObj[orderOption]
+              );
+            });
+        });
+      }
+    }
+
+    // testing for invalid sort options i.e. by "body" and "article_img_url" - status 400 - promise reject
+    const sortOptionsInvalid = ["body", "article_img_url"];
+    for (const orderOption of orderOptions) {
+      for (const sortOption of sortOptionsInvalid) {
+        test(`status 400 for ?sort_by=${sortOption}&order=${orderOption} when queried with unaccepted sorting (column) options`, () => {
+          return request(app)
+            .get(`/api/articles?sort_by=${sortOption}&order=${orderOption}`)
+            .expect(400)
+            .then(({ body }) => {
+              expect(body.msg).toBe("Bad request");
+            });
+        });
+      }
+    }
+
+    test("status 400 when passed on invalid query", () => {
+      return request(app)
+        .get("/api/articles?sort_by=chaka_chaka_khan&order=yoyoyo")
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Bad request");
+        });
+    });
   });
 });
 
