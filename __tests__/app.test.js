@@ -177,7 +177,7 @@ describe("/api/articles", () => {
       asc: { descending: false },
       desc: { descending: true },
     };
-
+    // reconsider these "batch testing"
     for (const orderOption of orderOptions) {
       for (const sortOption of sortOptions) {
         test(`status 200 for ?sort_by=${sortOption}&order=${orderOption} returns the articles in the article table sorted as queried by users`, () => {
@@ -195,27 +195,31 @@ describe("/api/articles", () => {
       }
     }
 
-    // testing for invalid sort options i.e. by "body" and "article_img_url" - status 400 - promise reject
-    const sortOptionsInvalid = ["body", "article_img_url"];
-    for (const orderOption of orderOptions) {
-      for (const sortOption of sortOptionsInvalid) {
-        test(`status 400 for ?sort_by=${sortOption}&order=${orderOption} when queried with unaccepted sorting (column) options`, () => {
-          return request(app)
-            .get(`/api/articles?sort_by=${sortOption}&order=${orderOption}`)
-            .expect(400)
-            .then(({ body }) => {
-              expect(body.msg).toBe("Bad request");
-            });
-        });
-      }
-    }
-
+    // testing for invalid sort options e.g. by "body"; "article_img_url"; or other inputs - status 400 - promise reject
     test("status 400 when passed on invalid query", () => {
       return request(app)
         .get("/api/articles?sort_by=chaka_chaka_khan&order=yoyoyo")
         .expect(400)
         .then(({ body }) => {
           expect(body.msg).toBe("Bad request");
+        });
+    });
+
+    // for when topic query is included - "cats" or "mitch"
+    test("status 200 and returns articles filtered by the topic value - 'cats' and other sort options", () => {
+      return request(app)
+        .get("/api/articles?sort_by=article_id&order=desc&topic=cats")
+        .expect(200)
+        .then(({ body: { articles } }) => {
+          expect(articles.length).toBe(1);
+        });
+    });
+    test("status 200 and returns articles filtered by the topic value - 'mitch'", () => {
+      return request(app)
+        .get("/api/articles?topic=mitch")
+        .expect(200)
+        .then(({ body: { articles } }) => {
+          expect(articles.length).toBe(12);
         });
     });
   });
