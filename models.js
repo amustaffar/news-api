@@ -16,9 +16,8 @@ exports.selectArticlesById = (id) => {
     });
 };
 
-// sort only by valid columns - not accepting "body" and "article_img_url" columns
 exports.selectArticles = (query) => {
-  const { sort_by = "created_at", order = "desc" } = query;
+  const { sort_by = "created_at", order = "desc", topic } = query;
 
   const acceptedOrderValues = ["asc", "desc"];
   const acceptedSortValues = [
@@ -38,7 +37,6 @@ exports.selectArticles = (query) => {
   }
 
   const queryString = format(
-    // reminder: never SELECT * for API -> dangerous
     `SELECT
       articles.author,
       articles.title,
@@ -50,12 +48,16 @@ exports.selectArticles = (query) => {
       COUNT(comments.comment_id) AS comment_count
     FROM articles LEFT JOIN comments
     ON articles.article_id = comments.article_id
+    ${topic ? `WHERE articles.topic = $1` : ""}
     GROUP BY articles.article_id
-    ORDER BY %I %s;`,
+    ORDER BY %I %s `,
     sort_by,
     order
   );
-  return db.query(queryString).then(({ rows }) => {
+
+  const params = topic ? [topic] : [];
+
+  return db.query(queryString, params).then(({ rows }) => {
     return rows;
   });
 };
