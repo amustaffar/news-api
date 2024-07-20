@@ -154,6 +154,7 @@ describe("/api/articles/:article_id", () => {
         });
     });
   });
+
   // ON DELETE CASCADE in seed.js to remove all associated comments
   describe("DELETE", () => {
     test("status 204: no content status code indicates that the server has successfully fulfilled the request and there is no additional information to send back", () => {
@@ -190,7 +191,6 @@ describe("/api/articles", () => {
           });
         });
     });
-
     const sortOptions = [
       "article_id",
       "title",
@@ -204,6 +204,7 @@ describe("/api/articles", () => {
       asc: { descending: false },
       desc: { descending: true },
     };
+
     // reconsider these "batch testing"
     for (const orderOption of orderOptions) {
       for (const sortOption of sortOptions) {
@@ -229,7 +230,6 @@ describe("/api/articles", () => {
           expect(articles.length).toBe(10);
         });
     });
-
     test("status 400 when passed on invalid query", () => {
       return request(app)
         .get("/api/articles?sort_by=chaka_chaka_khan&order=yoyoyo")
@@ -238,7 +238,6 @@ describe("/api/articles", () => {
           expect(body.msg).toBe("Bad request");
         });
     });
-
     test("status 200 and returns articles filtered by the topic value - 'cats' and other sort options", () => {
       return request(app)
         .get("/api/articles?sort_by=article_id&order=desc&topic=cats")
@@ -247,12 +246,13 @@ describe("/api/articles", () => {
           expect(articles.length).toBe(1);
         });
     });
-    test("status 200 and returns articles filtered by the topic value - 'mitch'", () => {
+    test("status 200 and returns articles filtered by the topic value - 'mitch' and return the count of all articles unbounded by pagination query", () => {
       return request(app)
         .get("/api/articles?topic=mitch")
         .expect(200)
-        .then(({ body: { articles } }) => {
-          expect(articles.length).toBe(10);
+        .then(({ body }) => {
+          expect(body.articles.length).toBe(10);
+          expect(body.total).toBe(12);
         });
     });
   });

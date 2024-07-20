@@ -36,10 +36,12 @@ exports.getArticlesById = (req, res, next) => {
 };
 
 exports.getArticles = (req, res, next) => {
-  models
-    .selectArticles(req.query)
-    .then((articles) => {
-      res.status(200).send({ articles });
+  Promise.all([
+    models.selectArticles(req.query),
+    models.countArticles(req.query),
+  ])
+    .then(([articles, total]) => {
+      res.status(200).send({ articles, total });
     })
     .catch(next);
 };

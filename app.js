@@ -51,13 +51,13 @@ app.use((err, req, res, next) => {
   if (err.code === "2201X") {
     res.status(404).send({ msg: "Page number must start from 1 not 0" });
   }
-  // console.log(err);
   next(err);
 });
 
 module.exports = app;
 
 // to dos:
-// /api/articles/:article_id - delete
 // express router for all endpoints
+// test.each
+// endpoints.json
 // CI/CD - github actions

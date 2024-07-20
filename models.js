@@ -45,6 +45,23 @@ exports.selectArticlesById = (id) => {
     });
 };
 
+// get ("/api/articles") - count of all returned articles
+exports.countArticles = (query) => {
+  const { topic } = query;
+
+  const params = topic ? [topic] : [];
+  const queryString = `
+    SELECT COUNT(article_id)::INT AS count
+    FROM articles
+    ${topic ? "WHERE topic = $1" : ""}
+  `;
+
+  return db.query(queryString, params).then(({ rows }) => {
+    return rows[0].count;
+  });
+};
+
+// get ("/api/articles") - return all articles with pagination
 exports.selectArticles = (query) => {
   const {
     sort_by = "created_at",
@@ -205,7 +222,6 @@ exports.insertArticle = (article) => {
 };
 
 exports.removeArticleByArticleId = (id) => {
-  console.log(id);
   return db
     .query(`DELETE FROM articles WHERE article_id = $1`, [id])
     .then(({ rowCount }) => rowCount === 1);
