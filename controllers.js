@@ -11,6 +11,13 @@ exports.getTopics = (req, res, next) => {
     });
 };
 
+exports.postTopic = (req, res, next) => {
+  models
+    .insertTopic(req.body)
+    .then((topic) => res.status(201).send({ topic }))
+    .catch(next);
+};
+
 exports.getArticlesById = (req, res, next) => {
   models
     .selectArticlesById(req.params.article_id)
@@ -39,7 +46,7 @@ exports.getArticles = (req, res, next) => {
 
 exports.getCommentsByArticleId = (req, res, next) => {
   models
-    .selectCommentsByArticleId(req.params.article_id)
+    .selectCommentsByArticleId(req.query, req.params.article_id)
     .then((comments) => {
       res.status(200).send({ comments });
     })
@@ -87,4 +94,51 @@ exports.getUsers = (req, res, next) => {
       res.status(200).send({ users });
     })
     .catch(next);
+};
+
+exports.getUsersById = (req, res, next) => {
+  models
+    .selectUsersById(req.params.username)
+    .then((user) => {
+      if (user) {
+        res.status(200).send({ user });
+      } else {
+        res
+          .status(404)
+          .send({ msg: `No user found under username ${req.params.username}` });
+      }
+    })
+    .catch(next);
+};
+
+exports.patchCommentById = (req, res, next) => {
+  models
+    .updateCommentById(req.body.inc_votes, req.params.comment_id)
+    .then((comment) => {
+      if (comment === undefined) {
+        res.status(404).send({ msg: "Not found" });
+      } else {
+        res.status(201).send(comment);
+      }
+    })
+    .catch(next);
+};
+
+exports.postArticle = (req, res, next) => {
+  models
+    .insertArticle(req.body)
+    .then((article) => {
+      res.status(201).send({ article });
+    })
+    .catch(next);
+};
+
+exports.deleteArticleByArticleId = (req, res, next) => {
+  models.removeArticleByArticleId(req.params.article_id).then((deleted) => {
+    if (deleted) {
+      res.status(204).send();
+    } else {
+      res.status(404).send({ msg: "Not found" });
+    }
+  });
 };

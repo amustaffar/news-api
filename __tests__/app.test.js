@@ -8,8 +8,7 @@ const app = require("../app");
 const seed = require("../db/seeds/seed");
 const endpoints = require("../endpoints.json");
 
-// seeding prior each test with test data
-// db.end() after each test
+// seeding/ending for each test
 beforeEach(() => seed(testData));
 afterAll(() => db.end());
 
@@ -40,6 +39,24 @@ describe("/api/topics", () => {
               slug: expect.any(String),
               description: expect.any(String),
             });
+          });
+        });
+    });
+  });
+  describe("POST", () => {
+    test("status 201 returns a topic object constaining the newly added topic", () => {
+      const objToPost = {
+        slug: "grooming",
+        description: "unisex beauty regime",
+      };
+      return request(app)
+        .post("/api/topics")
+        .send(objToPost)
+        .expect(201)
+        .then(({ body }) => {
+          expect(body.topic).toEqual({
+            slug: "grooming",
+            description: "unisex beauty regime",
           });
         });
     });
@@ -137,6 +154,15 @@ describe("/api/articles/:article_id", () => {
         });
     });
   });
+  // ON DELETE CASCADE in seed.js to remove all associated comments
+  describe("DELETE", () => {
+    test("status 204: no content status code indicates that the server has successfully fulfilled the request and there is no additional information to send back", () => {
+      return request(app).delete("/api/articles/1").expect(204);
+    });
+    test("status 404: not a valid id", () => {
+      return request(app).delete("/api/comments/999999").expect(404);
+    });
+  });
 });
 
 describe("/api/articles", () => {
@@ -146,7 +172,7 @@ describe("/api/articles", () => {
         .get("/api/articles")
         .expect(200)
         .then(({ body }) => {
-          expect(body.articles.length).toBe(13);
+          expect(body.articles.length).toBe(10);
           expect(body.articles).toBeSortedBy("created_at", {
             descending: true,
           });
@@ -164,7 +190,7 @@ describe("/api/articles", () => {
           });
         });
     });
-    // testing for sort and order options - status 200
+
     const sortOptions = [
       "article_id",
       "title",
@@ -186,7 +212,7 @@ describe("/api/articles", () => {
             .get(`/api/articles?sort_by=${sortOption}&order=${orderOption}`)
             .expect(200)
             .then(({ body: { articles } }) => {
-              expect(articles.length).toBe(13);
+              expect(articles.length).toBe(10);
               expect(articles).toBeSortedBy(
                 sortOption,
                 jestOptionObj[orderOption]
@@ -195,8 +221,15 @@ describe("/api/articles", () => {
         });
       }
     }
+    test("status 200 returns articles with the correct pagination", () => {
+      return request(app)
+        .get("/api/articles?topic=mitch&limit=10&page=1")
+        .expect(200)
+        .then(({ body: { articles } }) => {
+          expect(articles.length).toBe(10);
+        });
+    });
 
-    // testing for invalid sort options e.g. by "body"; "article_img_url"; or other inputs - status 400 - promise reject
     test("status 400 when passed on invalid query", () => {
       return request(app)
         .get("/api/articles?sort_by=chaka_chaka_khan&order=yoyoyo")
@@ -206,7 +239,6 @@ describe("/api/articles", () => {
         });
     });
 
-    // for when topic query is included - "cats" or "mitch"
     test("status 200 and returns articles filtered by the topic value - 'cats' and other sort options", () => {
       return request(app)
         .get("/api/articles?sort_by=article_id&order=desc&topic=cats")
@@ -220,7 +252,34 @@ describe("/api/articles", () => {
         .get("/api/articles?topic=mitch")
         .expect(200)
         .then(({ body: { articles } }) => {
-          expect(articles.length).toBe(12);
+          expect(articles.length).toBe(10);
+        });
+    });
+  });
+  describe("POST", () => {
+    test("status 201 an article posted and returned the article plus some other properties", () => {
+      return request(app)
+        .post("/api/articles")
+        .send({
+          author: "rogersop",
+          title: "the house of the dragon",
+          body: "the civil war between house targaryen also known as the dance of the dragon",
+          topic: "cats",
+          article_img_url: "http.miow-miow.com",
+        })
+        .expect(201)
+        .then(({ body }) => {
+          expect(body.article).toEqual({
+            article_id: 14,
+            title: "the house of the dragon",
+            topic: "cats",
+            author: "rogersop",
+            body: "the civil war between house targaryen also known as the dance of the dragon",
+            created_at: expect.any(String),
+            votes: 0,
+            article_img_url: "http.miow-miow.com",
+            comment_count: "0",
+          });
         });
     });
   });
@@ -228,12 +287,12 @@ describe("/api/articles", () => {
 
 describe("/api/articles/:article_id/comments", () => {
   describe("GET", () => {
-    test("status 200 returns an array of comments with correct properties, with the most recent comments first - article no. 3", () => {
+    test("status 200 returns an array of comments with correct properties, with the most recent comments first - article no. 1", () => {
       return request(app)
-        .get("/api/articles/3/comments")
+        .get("/api/articles/1/comments?limit=4&page=1")
         .expect(200)
         .then(({ body }) => {
-          expect(body.comments.length).toBe(2);
+          expect(body.comments.length).toBe(4);
           expect(body.comments).toBeSortedBy("created_at", {
             descending: true,
           });
@@ -250,12 +309,20 @@ describe("/api/articles/:article_id/comments", () => {
           });
         });
     });
+    test("status 404 for page number 0 returns SQL exception - article no. 1", () => {
+      return request(app)
+        .get("/api/articles/1/comments?limit=4&page=0")
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Page number must start from 1 not 0");
+        });
+    });
     test("status 200 returns an array of comments with correct properties, with the most recent comments first - article no. 1", () => {
       return request(app)
         .get("/api/articles/1/comments")
         .expect(200)
         .then(({ body }) => {
-          expect(body.comments.length).toBe(11);
+          expect(body.comments.length).toBe(10);
           expect(body.comments).toBeSortedBy("created_at", {
             descending: true,
           });
@@ -350,6 +417,56 @@ describe("/api/comments/:comment_id", () => {
       return request(app).delete("/api/comments/999999").expect(404);
     });
   });
+  describe("PATCH", () => {
+    test("status 201 responds with the updated comment: comment_id = 4; votes decreased by 25 to -125", () => {
+      const objToPatch = { inc_votes: -25 };
+      const objToReceive = {
+        comment_id: 4,
+        body: " I carry a log — yes. Is it funny to you? It is not to me.",
+        article_id: 1,
+        author: "icellusedkars",
+        created_at: "2020-02-23T12:01:00.000Z",
+        votes: -125,
+      };
+      return request(app)
+        .patch("/api/comments/4")
+        .send(objToPatch)
+        .expect(201)
+        .then(({ body }) => {
+          expect(body).toStrictEqual(objToReceive);
+        });
+    });
+    test("status 404: id is not in the database", () => {
+      const objToPatch = { inc_votes: 30 };
+      return request(app)
+        .patch("/api/comments/99999")
+        .send(objToPatch)
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Not found");
+        });
+    });
+    test("status 400: invalid inc_votes provided", () => {
+      const objToPatch = { inc_votes: "fffffff" };
+      return request(app)
+        .patch("/api/comments/3")
+        .send(objToPatch)
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Bad request");
+        });
+    });
+    test("status 400: invalid query type (string instead of a number", () => {
+      const objToPatch = { inc_votes: 30000 };
+      return request(app)
+        .patch("/api/comments/not-an-id")
+        .send(objToPatch)
+        .expect(400)
+        .then(({ body }) => {
+          expect(body.msg).toBe("Bad request");
+        });
+    });
+  });
 });
 
 describe("/api/users", () => {
@@ -367,6 +484,34 @@ describe("/api/users", () => {
               avatar_url: expect.any(String),
             });
           });
+        });
+    });
+  });
+});
+
+describe("/api/users/:username", () => {
+  describe("GET", () => {
+    test("status 200 returns a user object", () => {
+      const objToReceive = {
+        username: "rogersop",
+        name: "paul",
+        avatar_url:
+          "https://avatars2.githubusercontent.com/u/24394918?s=400&v=4",
+      };
+      return request(app)
+        .get("/api/users/rogersop")
+        .expect(200)
+        .then(({ body }) => {
+          //console.log(body);
+          expect(body.user).toStrictEqual(objToReceive);
+        });
+    });
+    test("status 404 for non-existing username", () => {
+      return request(app)
+        .get("/api/users/chakakhan")
+        .expect(404)
+        .then(({ body }) => {
+          expect(body.msg).toBe("No user found under username chakakhan");
         });
     });
   });

@@ -1,11 +1,24 @@
 const format = require("pg-format");
-// there is already an index.js in the respective folder url
 const db = require("./db/connection");
 
 exports.selectTopics = (query) => {
   return db.query(`SELECT slug, description FROM topics;`).then(({ rows }) => {
     return rows;
   });
+};
+
+exports.insertTopic = (topic) => {
+  const { slug, description } = topic;
+  return db
+    .query(
+      `INSERT INTO topics (slug, description)
+      VALUES ($1, $2)
+      RETURNING *`,
+      [slug, description]
+    )
+    .then(({ rows }) => {
+      return rows[0];
+    });
 };
 
 exports.selectArticlesById = (id) => {
@@ -33,8 +46,13 @@ exports.selectArticlesById = (id) => {
 };
 
 exports.selectArticles = (query) => {
-  const { sort_by = "created_at", order = "desc", topic } = query;
-
+  const {
+    sort_by = "created_at",
+    order = "desc",
+    limit = 10,
+    page = 1,
+    topic,
+  } = query;
   const acceptedOrderValues = ["asc", "desc"];
   const acceptedSortValues = [
     "article_id",
@@ -52,6 +70,10 @@ exports.selectArticles = (query) => {
     return Promise.reject({ status: 400, msg: "Bad request" });
   }
 
+  const offset = (page - 1) * limit;
+  const offsetParam = topic ? "$2" : "$1";
+  const limitParam = topic ? "$3" : "$2";
+
   const queryString = format(
     `SELECT
       articles.author,
@@ -66,19 +88,21 @@ exports.selectArticles = (query) => {
     ON articles.article_id = comments.article_id
     ${topic ? `WHERE articles.topic = $1` : ""}
     GROUP BY articles.article_id
-    ORDER BY %I %s `,
+    ORDER BY %I %s
+    OFFSET ${offsetParam} ROWS FETCH NEXT ${limitParam} ROWS ONLY;`,
     sort_by,
     order
   );
 
-  const params = topic ? [topic] : [];
+  const params = topic ? [topic, offset, limit] : [offset, limit];
 
   return db.query(queryString, params).then(({ rows }) => {
     return rows;
   });
 };
 
-exports.selectCommentsByArticleId = (id) => {
+exports.selectCommentsByArticleId = (query, id) => {
+  const { limit = 10, page } = query;
   return db
     .query(
       `SELECT comment_id,
@@ -89,8 +113,9 @@ exports.selectCommentsByArticleId = (id) => {
     article_id
     FROM comments
     WHERE article_id = $1
-    ORDER BY created_at DESC`,
-      [id]
+    ORDER BY created_at DESC
+    OFFSET (($2 - 1) * $3) ROWS FETCH NEXT $3 ROWS ONLY;`,
+      [id, page, limit]
     )
     .then(({ rows }) => {
       if (rows.length === 0) {
@@ -139,4 +164,49 @@ exports.selectUsers = () => {
   return db.query(`SELECT * FROM users;`).then(({ rows }) => {
     return rows;
   });
+};
+
+exports.selectUsersById = (id) => {
+  return db
+    .query(`SELECT * FROM users WHERE username = $1;`, [id])
+    .then(({ rows }) => {
+      return rows[0];
+    });
+};
+
+exports.updateCommentById = (inc_votes, id) => {
+  return db
+    .query(
+      `UPDATE comments SET votes = votes + $1 WHERE comment_id = $2 RETURNING *`,
+      [inc_votes, id]
+    )
+    .then(({ rows }) => {
+      return rows[0];
+    });
+};
+
+exports.insertArticle = (article) => {
+  const { author, title, body, topic, article_img_url = "url" } = article;
+  return db
+    .query(
+      `INSERT INTO articles
+      (author,
+      title,
+      body,
+      topic,
+      article_img_url)
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING article_id;`,
+      [author, title, body, topic, article_img_url]
+    )
+    .then(({ rows }) => {
+      return exports.selectArticlesById(rows[0].article_id);
+    });
+};
+
+exports.removeArticleByArticleId = (id) => {
+  console.log(id);
+  return db
+    .query(`DELETE FROM articles WHERE article_id = $1`, [id])
+    .then(({ rowCount }) => rowCount === 1);
 };
