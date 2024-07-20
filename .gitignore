@@ -1,3 +1,4 @@
 node_modules
 .env.*
-sprintReadme
+sprintReadme.md
+.DS_Store
