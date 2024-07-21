@@ -191,37 +191,37 @@ describe("/api/articles", () => {
           });
         });
     });
-    const sortOptions = [
-      "article_id",
-      "title",
-      "topic",
-      "author",
-      "created_at",
-      "votes",
-    ];
-    const orderOptions = ["asc", "desc"];
-    const jestOptionObj = {
-      asc: { descending: false },
-      desc: { descending: true },
-    };
+    test.each([
+      ["article_id", "asc"],
+      ["title", "asc"],
+      ["topic", "asc"],
+      ["author", "asc"],
+      ["created_at", "asc"],
+      ["votes", "asc"],
+      ["article_id", "desc"],
+      ["title", "desc"],
+      ["topic", "desc"],
+      ["author", "desc"],
+      ["created_at", "desc"],
+      ["votes", "desc"],
+    ])(
+      "status 200 for ?sort_by=%s&order=%s returns the articles in the article table sorted as queried by users",
+      (sort_by, order) => {
+        const jestOptionObj = {
+          asc: { descending: false },
+          desc: { descending: true },
+        };
 
-    // reconsider these "batch testing"
-    for (const orderOption of orderOptions) {
-      for (const sortOption of sortOptions) {
-        test(`status 200 for ?sort_by=${sortOption}&order=${orderOption} returns the articles in the article table sorted as queried by users`, () => {
-          return request(app)
-            .get(`/api/articles?sort_by=${sortOption}&order=${orderOption}`)
-            .expect(200)
-            .then(({ body: { articles } }) => {
-              expect(articles.length).toBe(10);
-              expect(articles).toBeSortedBy(
-                sortOption,
-                jestOptionObj[orderOption]
-              );
-            });
-        });
+        return request(app)
+          .get(`/api/articles?sort_by=${sort_by}&order=${order}`)
+          .expect(200)
+          .then(({ body: { articles } }) => {
+            expect(articles.length).toBe(10);
+            expect(articles).toBeSortedBy(sort_by, jestOptionObj[order]);
+          });
       }
-    }
+    );
+
     test("status 200 returns articles with the correct pagination", () => {
       return request(app)
         .get("/api/articles?topic=mitch&limit=10&page=1")
