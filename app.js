@@ -4,7 +4,6 @@ const controllers = require("./controllers");
 const endpoints = require("./endpoints.json");
 app.use(express.json());
 
-// all endpoints prior refactoring using express router
 app.get("/api", (req, res, next) => {
   res.status(200).send({ endpoints });
 });
@@ -56,8 +55,7 @@ app.use((err, req, res, next) => {
 
 module.exports = app;
 
-// to dos:
-// express router for all endpoints
-// test.each
-// endpoints.json
-// CI/CD - github actions
+// to do:
+// reorganise endpoints - express router
+// reorganise controllers
+// reorganise models
