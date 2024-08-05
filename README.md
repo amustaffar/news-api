@@ -18,6 +18,7 @@ Back end - building an API for the purpose of accessing application data program
   After the previous is complete, run "npm install" to install the required dependencies.
 - Database setup:
   You have also been provided with a db folder with some data, a setup.sql file and a seeds folder.
+- CI / CD workflow is setup upon pull request (PR) and push to the main branch.
 
 ## Minimum requirements:
 
